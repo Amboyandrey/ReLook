@@ -16,6 +16,7 @@ load_dotenv()
 
 from .db import init_db  # noqa: E402
 from .routes.documents import router as documents_router  # noqa: E402
+from .routes.eval import router as eval_router  # noqa: E402
 from .routes.tasks import router as tasks_router  # noqa: E402
 
 app = FastAPI(title="ReLook Review Queue", version="0.1.0")
@@ -42,3 +43,4 @@ def health() -> dict:
 
 app.include_router(documents_router)
 app.include_router(tasks_router)
+app.include_router(eval_router)
