@@ -43,4 +43,15 @@ export const api = {
     }),
 
   getTaxonomy: () => request("/taxonomy"),
+
+  listTasks: (filters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.status) params.set("status", filters.status);
+    const qs = params.toString();
+    return request(`/tasks${qs ? `?${qs}` : ""}`);
+  },
+
+  completeTask: (id) => request(`/tasks/${id}/complete`, { method: "POST" }),
+
+  listNotifications: () => request("/notifications"),
 };

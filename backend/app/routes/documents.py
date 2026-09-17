@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from relook.parsing import UnsupportedDocumentError
 
-from .. import pipeline, storage
+from .. import pipeline, routing, storage
 from ..db import get_db
 from ..models import Document, ReviewEvent
 from ..schemas import DocumentDetail, DocumentSummary, ReviewSubmission, TaxonomyOut, TaxonomyCategory
@@ -178,6 +178,14 @@ def review_document(document_id: int, submission: ReviewSubmission, db: Session 
             notes=submission.notes,
         )
     )
+
+    if document.status == "approved":
+        # File the original, create tasks from requests[], notify owners.
+        # Runs in the same transaction as the review event above -- if this
+        # raises, the whole review (including the approval itself) rolls
+        # back rather than leaving a half-routed document.
+        routing.route_approved_document(db, document)
+
     db.commit()
     db.refresh(document)
     return document

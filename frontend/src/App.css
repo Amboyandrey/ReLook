@@ -49,6 +49,11 @@ body {
   margin: 0;
 }
 
+.view-nav {
+  display: flex;
+  gap: 0.4rem;
+}
+
 .upload-button {
   background: var(--accent);
   color: white;
@@ -364,4 +369,89 @@ body {
   justify-content: center;
   color: var(--text-muted);
   grid-column: span 2;
+}
+
+.tasks-view {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .tasks-view {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+}
+
+.tasks-main {
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.tasks-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.tasks-table th {
+  text-align: left;
+  color: var(--text-muted);
+  font-weight: 500;
+  padding: 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.tasks-table td {
+  padding: 0.5rem 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.notifications-feed {
+  border-left: 1px solid var(--border);
+  padding: 1rem;
+  overflow-y: auto;
+  background: var(--bg-panel);
+}
+
+.notifications-feed h3 {
+  font-size: 0.9rem;
+  margin-top: 0;
+}
+
+.notifications-feed ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.notifications-feed li {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.notifications-feed li.notif-failed {
+  border-color: var(--danger);
+}
+
+.notif-header {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  margin-bottom: 0.2rem;
+}
+
+.notif-message {
+  margin-bottom: 0.2rem;
+}
+
+.notif-time {
+  font-size: 0.7rem;
 }
