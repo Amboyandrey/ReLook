@@ -1,0 +1,53 @@
+# Document categories for the HR intake desk.
+# Each category needs a short description used to steer the AI's classification
+# and a default routing owner. Edit this file to relabel or add categories --
+# no code changes required.
+
+categories:
+  leave_request:
+    description: >
+      An employee is requesting time off (vacation, unpaid leave, sick leave,
+      parental leave, sabbatical, etc.) and needs approval.
+    default_owner: HR manager
+
+  offer_letter:
+    description: >
+      A job offer, offer letter draft, or an offer acceptance/rejection from
+      a candidate.
+    default_owner: Recruiting
+
+  complaint:
+    description: >
+      A grievance, harassment report, workplace conflict, or formal complaint
+      raised by an employee.
+    default_owner: HR business partner
+
+  policy_ack:
+    description: >
+      An employee acknowledgment or sign-off on a company policy, handbook,
+      code of conduct, or training completion.
+    default_owner: HR operations
+
+  expense_report:
+    description: >
+      An expense report, reimbursement request, or receipts submitted for
+      approval.
+    default_owner: Finance
+
+  contract:
+    description: >
+      An employment contract, NDA, amendment, or other legal agreement
+      involving an employee or contractor.
+    default_owner: Legal
+
+  other:
+    description: >
+      Anything that does not clearly fit another category, or that needs a
+      human to read before it can be classified.
+    default_owner: HR generalist
+
+# Confidence at or above this threshold is eligible for auto-approval once
+# the review loop is built in a later phase. For now every document is
+# queued for human review regardless of confidence -- this just gets
+# recorded so the eventual auto-approve threshold can be tuned from data.
+auto_approve_threshold: 0.95
