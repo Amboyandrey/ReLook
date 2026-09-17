@@ -78,3 +78,31 @@ class TaxonomyCategory(BaseModel):
 class TaxonomyOut(BaseModel):
     categories: list[TaxonomyCategory]
     auto_approve_threshold: float
+
+
+class TaskOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    document_id: int
+    text: str
+    deadline: Optional[str] = None
+    owner: Optional[str] = None
+    status: str
+    created_at: datetime.datetime
+    completed_at: Optional[datetime.datetime] = None
+    document_filename: Optional[str] = None
+
+
+class NotificationOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    document_id: int
+    task_id: Optional[int] = None
+    recipient: str
+    message: str
+    channel: str
+    delivered: bool
+    error: Optional[str] = None
+    created_at: datetime.datetime

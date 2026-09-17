@@ -9,7 +9,9 @@ anything gets acted on.
 review queue: a FastAPI backend that stores every document and its AI
 analysis, and a React screen where a human sees the document next to the
 AI's output and approves, edits, or rejects it before anything downstream
-acts on it. See [Roadmap](#roadmap).
+acts on it. **Phase 3** makes approval actually do something: the original
+gets filed, every extracted request becomes a trackable task, and task
+owners get notified. See [Roadmap](#roadmap).
 
 ## How it works
 
@@ -104,6 +106,43 @@ Every review action is logged to an append-only `review_events` table
 pairing the AI's original (frozen) output with what the human decided —
 this is the dataset the phase-4 learning loop will train on.
 
+## Usage: Routing & actions (phase 3)
+
+Approving a document (in the review queue's UI, or via `POST
+/documents/{id}/review`) now triggers three things automatically, in the
+same request:
+
+1. **Filing** — the original file moves from the flat `data/uploads/` drop
+   folder into `data/filed/<category>/<year>/<month>/`.
+2. **Task creation** — every entry in the document's `requests[]` becomes a
+   row in a `tasks` table (text, owner, deadline, status). View and
+   complete them from the **Tasks** tab in the frontend, or via `GET
+   /tasks` / `POST /tasks/{id}/complete`.
+3. **Notification** — each task's owner is notified. This always writes an
+   in-app record (visible in the Tasks tab's notification feed and via `GET
+   /notifications`) with no setup required. Two optional external channels
+   activate automatically when configured via environment variables:
+
+   ```bash
+   # Email (optional)
+   SMTP_HOST=smtp.example.com
+   SMTP_PORT=587                # default 587
+   SMTP_USER=...                # optional
+   SMTP_PASSWORD=...            # optional
+   SMTP_FROM=relook@example.com # default relook@localhost
+   SMTP_USE_TLS=true            # default true
+
+   # Slack (optional)
+   SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
+   ```
+
+   A failed external delivery (bad webhook, SMTP auth failure, ...) is
+   recorded on the notification row rather than blocking the approval —
+   check `GET /notifications` for `delivered: false` entries.
+
+A document with no extracted requests still gets a single notification
+confirming it was filed, sent to whoever approved it.
+
 ## Known limitation (by design, for now)
 
 Page numbers on extracted requests are self-reported by the model, not
@@ -118,7 +157,8 @@ once there's a review UI to click through to a highlighted page.
 1. ✅ CLI pipeline
 2. ✅ Review queue: FastAPI + SQLite/Postgres + a React screen showing the
    document next to the AI's output, with approve/edit/reject actions
-3. Routing & actions: notifications, filing, task creation from `requests[]`
+3. ✅ Routing & actions: filing, task creation from `requests[]`, and
+   notifications (in-app always; email/Slack optional) on approval
 4. Learning loop: use the `review_events` audit log as a correction
    dataset, build an eval set, use accuracy data to safely raise the
    auto-approve confidence threshold

@@ -3,6 +3,7 @@ import { api } from "./api";
 import DocumentList from "./components/DocumentList";
 import DocumentViewer from "./components/DocumentViewer";
 import ReviewPanel from "./components/ReviewPanel";
+import TasksView from "./components/TasksView";
 import "./App.css";
 
 function loadReviewerName() {
@@ -22,6 +23,7 @@ function saveReviewerName(name) {
 }
 
 export default function App() {
+  const [view, setView] = useState("queue"); // "queue" | "tasks"
   const [status, setStatus] = useState("pending");
   const [documents, setDocuments] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
@@ -95,7 +97,15 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>ReLook — Review Queue</h1>
+        <h1>ReLook</h1>
+        <nav className="view-nav">
+          <button className={view === "queue" ? "tab active" : "tab"} onClick={() => setView("queue")}>
+            Review Queue
+          </button>
+          <button className={view === "tasks" ? "tab active" : "tab"} onClick={() => setView("tasks")}>
+            Tasks
+          </button>
+        </nav>
         <label className="upload-button">
           {uploading ? "Analyzing…" : "Upload document"}
           <input type="file" accept=".pdf,.docx,.txt,.md" onChange={handleUpload} disabled={uploading} hidden />
@@ -108,34 +118,38 @@ export default function App() {
         </div>
       )}
 
-      <div className="app-body">
-        <DocumentList
-          documents={documents}
-          status={status}
-          onStatusChange={setStatus}
-          selectedId={selectedId}
-          onSelect={setSelectedId}
-          loading={loading}
-        />
+      {view === "queue" ? (
+        <div className="app-body">
+          <DocumentList
+            documents={documents}
+            status={status}
+            onStatusChange={setStatus}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            loading={loading}
+          />
 
-        {selectedDoc ? (
-          <>
-            <DocumentViewer document={selectedDoc} />
-            <ReviewPanel
-              document={selectedDoc}
-              categories={categories}
-              reviewer={reviewer}
-              onReviewerChange={handleReviewerChange}
-              onSubmitted={handleReviewSubmitted}
-              onError={setError}
-            />
-          </>
-        ) : (
-          <div className="empty-state">
-            <p>Select a document, or upload one to get started.</p>
-          </div>
-        )}
-      </div>
+          {selectedDoc ? (
+            <>
+              <DocumentViewer document={selectedDoc} />
+              <ReviewPanel
+                document={selectedDoc}
+                categories={categories}
+                reviewer={reviewer}
+                onReviewerChange={handleReviewerChange}
+                onSubmitted={handleReviewSubmitted}
+                onError={setError}
+              />
+            </>
+          ) : (
+            <div className="empty-state">
+              <p>Select a document, or upload one to get started.</p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <TasksView onError={setError} />
+      )}
     </div>
   );
 }
