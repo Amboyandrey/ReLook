@@ -43,6 +43,17 @@ def load_content_blocks(path: Path) -> list[dict]:
     )
 
 
+def extract_preview_text(path: Path) -> str | None:
+    """Raw extracted text for display, or None for file types the browser
+    can render natively (PDFs -- no extraction needed for a viewer)."""
+    suffix = path.suffix.lower()
+    if suffix == ".docx":
+        return _extract_docx_text(path)
+    if suffix in (".txt", ".md"):
+        return path.read_text(encoding="utf-8", errors="replace")
+    return None
+
+
 def page_count(path: Path) -> int | None:
     """Best-effort page count, used only for logging -- not sent to the API."""
     if path.suffix.lower() == ".pdf":
