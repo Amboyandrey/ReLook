@@ -5,9 +5,11 @@ Claude classifies it, summarizes it, and pulls out what needs to be done —
 with a confidence score and a flag for when a person should look before
 anything gets acted on.
 
-This is **phase 1**: a CLI pipeline. No database, no review UI yet — the
-goal is to validate classification/extraction quality on real documents
-before building anything around it. See [Roadmap](#roadmap).
+**Phase 1** is a CLI pipeline (still here, still works). **Phase 2** adds a
+review queue: a FastAPI backend that stores every document and its AI
+analysis, and a React screen where a human sees the document next to the
+AI's output and approves, edits, or rejects it before anything downstream
+acts on it. See [Roadmap](#roadmap).
 
 ## How it works
 
@@ -37,7 +39,7 @@ cp .env.example .env   # then add your ANTHROPIC_API_KEY
 If you've already run `ant auth login`, you can skip `.env` entirely — the
 SDK picks up the stored login automatically.
 
-## Usage
+## Usage: CLI (phase 1)
 
 ```bash
 # Process every supported file in a folder
@@ -68,6 +70,40 @@ Each run writes one JSON file per document to `output/`, e.g.:
 }
 ```
 
+## Usage: Review queue (phase 2)
+
+The review queue reuses the same `relook` engine as the CLI (`src/relook/`)
+behind a FastAPI backend, with a React frontend for the human review step.
+
+```bash
+# Backend (from the repo root, same venv as above)
+pip install -e ".[api]"
+uvicorn backend.app.main:app --reload --port 8000
+
+# Frontend (separate terminal)
+cd frontend
+npm install
+cp .env.example .env   # only needed if the backend isn't on localhost:8000
+npm run dev
+```
+
+Open the frontend's printed URL (default `http://localhost:5173`). Upload a
+PDF/DOCX/TXT/MD file, and it's classified immediately and dropped into the
+**Pending** queue. Click a document to see it next to the AI's category,
+summary, and extracted requests — edit any field, then **Approve** or
+**Reject**. Approved/rejected documents move to their own tabs and become
+read-only.
+
+Storage defaults to a local SQLite file at `data/relook.db` (created
+automatically) with uploaded originals in `data/uploads/` — nothing to set
+up for local dev. Point `DATABASE_URL` at a Postgres instance for anything
+beyond that (install the `postgres` extra for the driver:
+`pip install -e ".[postgres]"`).
+
+Every review action is logged to an append-only `review_events` table
+pairing the AI's original (frozen) output with what the human decided —
+this is the dataset the phase-4 learning loop will train on.
+
 ## Known limitation (by design, for now)
 
 Page numbers on extracted requests are self-reported by the model, not
@@ -79,9 +115,10 @@ once there's a review UI to click through to a highlighted page.
 
 ## Roadmap
 
-1. ✅ CLI pipeline (this phase)
-2. Review queue: FastAPI + Postgres + a React screen showing the document
-   next to the AI's output, with approve/edit/reject actions
+1. ✅ CLI pipeline
+2. ✅ Review queue: FastAPI + SQLite/Postgres + a React screen showing the
+   document next to the AI's output, with approve/edit/reject actions
 3. Routing & actions: notifications, filing, task creation from `requests[]`
-4. Learning loop: store human corrections, build an eval set, use accuracy
-   data to safely raise the auto-approve confidence threshold
+4. Learning loop: use the `review_events` audit log as a correction
+   dataset, build an eval set, use accuracy data to safely raise the
+   auto-approve confidence threshold

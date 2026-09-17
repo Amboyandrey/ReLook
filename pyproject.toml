@@ -12,6 +12,20 @@ dependencies = [
     "python-dotenv>=1.0",
 ]
 
+[project.optional-dependencies]
+# Phase 2: review queue API. Defaults to a local SQLite file so the review
+# queue runs with zero extra setup; point DATABASE_URL at Postgres for
+# anything beyond local dev (add the "postgres" extra too, for the driver).
+api = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "sqlalchemy>=2.0",
+    "python-multipart>=0.0.9",
+]
+postgres = [
+    "psycopg[binary]>=3.1",
+]
+
 [project.scripts]
 relook = "relook.cli:main"
 
