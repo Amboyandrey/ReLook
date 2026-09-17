@@ -54,4 +54,8 @@ export const api = {
   completeTask: (id) => request(`/tasks/${id}/complete`, { method: "POST" }),
 
   listNotifications: () => request("/notifications"),
+
+  getAccuracyReport: () => request("/eval/report"),
+
+  exportCorrections: () => request("/eval/export", { method: "POST" }),
 };

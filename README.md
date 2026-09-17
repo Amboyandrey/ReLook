@@ -11,7 +11,11 @@ analysis, and a React screen where a human sees the document next to the
 AI's output and approves, edits, or rejects it before anything downstream
 acts on it. **Phase 3** makes approval actually do something: the original
 gets filed, every extracted request becomes a trackable task, and task
-owners get notified. See [Roadmap](#roadmap).
+owners get notified. **Phase 4** closes the loop: every review is already
+logged pairing the AI's original output with the human's final decision --
+this phase turns that log into an accuracy report and a data-driven
+recommendation for how far the auto-approve threshold can safely move. See
+[Roadmap](#roadmap).
 
 ## How it works
 
@@ -143,6 +147,36 @@ same request:
 A document with no extracted requests still gets a single notification
 confirming it was filed, sent to whoever approved it.
 
+## Usage: Learning loop (phase 4)
+
+Every `ReviewEvent` already stores both the AI's original (frozen) output
+and the human's final decision -- phase 4 adds no new tracking, it just
+turns that history into something actionable. Nothing here calls the
+Anthropic API; it's pure aggregation over what's already in the database.
+
+Open the **Insights** tab (or `GET /eval/report`) for:
+
+- Category agreement rate, and a breakdown by AI confidence bucket
+- The **risky-miss rate**: how often a document the AI marked
+  `needs_human=False` still needed an edit or a rejection -- the number
+  that actually matters for auto-approve safety
+- A **recommended auto-approve threshold**: the lowest confidence level
+  where, across everything reviewed so far, zero `needs_human=False`
+  documents needed a correction. Requires at least 10 reviewed
+  `needs_human=False` documents before it recommends anything
+
+Applying the recommendation is a deliberate manual step -- update
+`auto_approve_threshold` in [`config/taxonomy.yaml`](config/taxonomy.yaml)
+yourself once you're comfortable with the sample size behind it; nothing
+writes to that file automatically.
+
+Click **Export corrections.jsonl** (or `POST /eval/export`, or run
+`python scripts/build_eval_set.py` without the server running) to write
+every reviewed document -- AI output paired with the human's final call --
+to `data/eval/corrections.jsonl`. Useful as a few-shot/prompt-tuning
+dataset now, and as the seed of a proper eval set once there's enough
+volume to hold out a test split.
+
 ## Known limitation (by design, for now)
 
 Page numbers on extracted requests are self-reported by the model, not
@@ -159,6 +193,12 @@ once there's a review UI to click through to a highlighted page.
    document next to the AI's output, with approve/edit/reject actions
 3. ✅ Routing & actions: filing, task creation from `requests[]`, and
    notifications (in-app always; email/Slack optional) on approval
-4. Learning loop: use the `review_events` audit log as a correction
-   dataset, build an eval set, use accuracy data to safely raise the
-   auto-approve confidence threshold
+4. ✅ Learning loop: an Insights view over the `review_events` audit log --
+   accuracy by confidence bucket, a data-driven auto-approve threshold
+   recommendation, and a `corrections.jsonl` export
+
+Everything on the original roadmap is built. From here, natural next steps
+are: applying the recommended threshold to actually skip human review for
+high-confidence documents, an automated eval harness that replays
+`corrections.jsonl` against prompt changes, and auth/multi-tenant support
+if this moves beyond a single team.

@@ -4,6 +4,7 @@ import DocumentList from "./components/DocumentList";
 import DocumentViewer from "./components/DocumentViewer";
 import ReviewPanel from "./components/ReviewPanel";
 import TasksView from "./components/TasksView";
+import InsightsView from "./components/InsightsView";
 import "./App.css";
 
 function loadReviewerName() {
@@ -23,7 +24,7 @@ function saveReviewerName(name) {
 }
 
 export default function App() {
-  const [view, setView] = useState("queue"); // "queue" | "tasks"
+  const [view, setView] = useState("queue"); // "queue" | "tasks" | "insights"
   const [status, setStatus] = useState("pending");
   const [documents, setDocuments] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
@@ -105,6 +106,9 @@ export default function App() {
           <button className={view === "tasks" ? "tab active" : "tab"} onClick={() => setView("tasks")}>
             Tasks
           </button>
+          <button className={view === "insights" ? "tab active" : "tab"} onClick={() => setView("insights")}>
+            Insights
+          </button>
         </nav>
         <label className="upload-button">
           {uploading ? "Analyzing…" : "Upload document"}
@@ -147,8 +151,10 @@ export default function App() {
             </div>
           )}
         </div>
-      ) : (
+      ) : view === "tasks" ? (
         <TasksView onError={setError} />
+      ) : (
+        <InsightsView onError={setError} />
       )}
     </div>
   );
